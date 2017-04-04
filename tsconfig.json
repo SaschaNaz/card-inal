@@ -1,0 +1,11 @@
+{
+    "compilerOptions": {
+        "target": "es2015",
+        "declaration": true,
+        "sourceMap": true,
+        "noImplicitAny": true,
+        "noImplicitThis": true,
+        "module": "commonjs",
+        "outDir": "built/"
+    }
+}
