@@ -1,3 +1,5 @@
+import { jsdom } from "jsdom"
+
 export type TwitterCard = SummaryCard | AppCard | PlayerCard | AmplifyCard;
 
 export interface ValueOrId {
@@ -6,7 +8,7 @@ export interface ValueOrId {
 }
 
 export function parse(html: string, origin: string): TwitterCard {
-    const doc = new DOMParser().parseFromString(html, "text/html");
+    const doc = jsdom(html,  { features: [] });
 
     const metas = doc.getElementsByTagName("meta"); // Twitter collects <meta> not only from <head> but from everywhere
     const head = doc.createElement("head");

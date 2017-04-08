@@ -19,5 +19,9 @@
   "bugs": {
     "url": "https://github.com/SaschaNaz/cardinal/issues"
   },
-  "homepage": "https://github.com/SaschaNaz/cardinal#readme"
+  "homepage": "https://github.com/SaschaNaz/cardinal#readme",
+  "dependencies": {
+    "@types/jsdom": "^2.0.30",
+    "jsdom": "^9.12.0"
+  }
 }
