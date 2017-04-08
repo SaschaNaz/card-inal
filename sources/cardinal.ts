@@ -10,49 +10,44 @@ export interface ValueOrId {
 export function parse(html: string, origin: string): TwitterCard {
     const doc = jsdom(html,  { features: { FetchExternalResources: false, ProcessExternalResources: false } });
 
+    const metas = doc.getElementsByTagName("meta"); // Twitter collects <meta> not only from <head> but from everywhere
+    const head = doc.createElement("head");
+    for (const meta of Array.from(metas)) {
+        head.appendChild(meta.cloneNode());
+    }
+    const cardEl = getMetaContent(head, "card");
+    if (!cardEl) {
+        return;
+    }
     try {
-        const metas = doc.getElementsByTagName("meta"); // Twitter collects <meta> not only from <head> but from everywhere
-        const head = doc.createElement("head");
-        for (const meta of Array.from(metas)) {
-            head.appendChild(meta.cloneNode());
+        switch (cardEl.value) {
+            case "summary":
+            case "summary_large_image":
+                return parseSummary(head, cardEl.value as any, origin);
+            case "photo": // yet used by flickr
+                console.warn("Deprecated 'photo' card type is detected");
+                return parseSummary(head, "summary_large_image", origin);
+            case "gallery":
+                console.warn("Deprecated 'gallery' card type is detected");
+                return parseDeprecatedGallery(head, origin);
+            case "app":
+                return parseApp(head);
+            case "player":
+                return parsePlayer(head);
+            case "product":
+                console.warn("Deprecated 'product' card type is detected");
+                return parseSummary(head, "summary", origin);
+            case "amplify":
+                return parseAmplify(head);
         }
-        const cardEl = getMetaContent(head, "card");
-        if (!cardEl) {
-            return;
-        }
-        try {
-            switch (cardEl.value) {
-                case "summary":
-                case "summary_large_image":
-                    return parseSummary(head, cardEl.value as any, origin);
-                case "photo": // yet used by flickr
-                    console.warn("Deprecated 'photo' card type is detected");
-                    return parseSummary(head, "summary_large_image", origin);
-                case "gallery":
-                    console.warn("Deprecated 'gallery' card type is detected");
-                    return parseDeprecatedGallery(head, origin);
-                case "app":
-                    return parseApp(head);
-                case "player":
-                    return parsePlayer(head);
-                case "product":
-                    console.warn("Deprecated 'product' card type is detected");
-                    return parseSummary(head, "summary", origin);
-                case "amplify":
-                    return parseAmplify(head);
-            }
-        }
-        catch (err) {
-            err.message = `Malformed Twitter Card type '${cardEl.value}': ${err.message || err}`;
-            throw err;
-        }
+    }
+    catch (err) {
+        err.message = `Malformed Twitter Card type '${cardEl.value}': ${err.message || err}`;
+        throw err;
+    }
 
-        // deprecated gallery and product card does not show active use, should just throw
-        throw new Error(`Unsupported Twitter Card type '${cardEl.value}'`);
-    }
-    finally {
-        doc.parentWindow.close();
-    }
+    // deprecated gallery and product card does not show active use, should just throw
+    throw new Error(`Unsupported Twitter Card type '${cardEl.value}'`);
 }
 
 export interface SummaryCard {
