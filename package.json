@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Accepts Twitter Cards metadata and creates corresponding JSON file",
   "main": "lib/cardinal.js",
+  "typings": "lib/cardinal.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
