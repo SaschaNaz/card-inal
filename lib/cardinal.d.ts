@@ -66,4 +66,3 @@ export interface AmplifyCard {
     amplifyContentDurationSeconds: number;
     amplifyShareId: string;
 }
-export declare function parseAmplify(head: HTMLHeadElement): AmplifyCard;

@@ -192,7 +192,7 @@ export interface AmplifyCard {
     amplifyShareId: string;
 }
 
-export function parseAmplify(head: HTMLHeadElement) {
+function parseAmplify(head: HTMLHeadElement) {
     const card = { card: "amplify" } as AmplifyCard;
 
     // Amplify card is not documented, do not require anything here and consider all optional
