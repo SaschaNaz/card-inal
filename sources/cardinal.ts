@@ -16,6 +16,9 @@ export function parse(html: string, origin: string): TwitterCard {
         head.appendChild(meta.cloneNode());
     }
     const cardType = getCardType(head);
+    if (!cardType) {
+        return;
+    }
     try {
         switch (cardType) {
             case "summary":
