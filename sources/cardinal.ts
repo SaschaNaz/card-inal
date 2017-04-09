@@ -15,15 +15,12 @@ export function parse(html: string, origin: string): TwitterCard {
     for (const meta of Array.from(metas)) {
         head.appendChild(meta.cloneNode());
     }
-    const cardEl = getMetaContent(head, "card");
-    if (!cardEl) {
-        return;
-    }
+    const cardType = getCardType(head);
     try {
-        switch (cardEl.value) {
+        switch (cardType) {
             case "summary":
             case "summary_large_image":
-                return parseSummary(head, cardEl.value as any, origin);
+                return parseSummary(head, cardType, origin);
             case "photo": // yet used by flickr
                 console.warn("Deprecated 'photo' card type is detected");
                 return parseSummary(head, "summary_large_image", origin);
@@ -42,12 +39,24 @@ export function parse(html: string, origin: string): TwitterCard {
         }
     }
     catch (err) {
-        err.message = `Malformed Twitter Card type '${cardEl.value}': ${err.message || err}`;
+        err.message = `Malformed Twitter Card type '${cardType}': ${err.message || err}`;
         throw err;
     }
 
     // deprecated gallery and product card does not show active use, should just throw
-    throw new Error(`Unsupported Twitter Card type '${cardEl.value}'`);
+    throw new Error(`Unsupported Twitter Card type '${cardType}'`);
+}
+
+/** Try getting twitter:card and then og:type */
+function getCardType(head: HTMLHeadElement) {
+    const card = getMetaContent(head, "card");
+    if (card) {
+        return card.value
+    }
+    const ogTypeEl = getMeta(head, "og:type");
+    if (ogTypeEl && getMetaProperty(ogTypeEl) === "article") {
+        return "summary"
+    }
 }
 
 export interface SummaryCard {
@@ -221,15 +230,23 @@ interface MetaGetOptions {
     required?: boolean;
 }
 
+function getMeta(head: HTMLHeadElement, property: string) {
+    return head.querySelector(`meta[name='${property}'], meta[property='${property}']`) as HTMLMetaElement;
+}
+
+function getMetaProperty(meta: HTMLMetaElement) {
+    return (meta.content || meta.getAttribute("value") || "").trim()
+}
+
 function getMetaContent(head: HTMLHeadElement, cardTagName: string, options?: MetaGetOptions & { allowId?: boolean; }): ValueOrId {
-    let tagEl = head.querySelector(`meta[name='twitter:${cardTagName}'], meta[property='twitter:${cardTagName}']`) as HTMLMetaElement;
+    let tagEl = getMeta(head, `twitter:${cardTagName}`);
     if (!tagEl && options && options.ogTagName) {
-        tagEl = head.querySelector(`meta[name='og:${options.ogTagName}'], meta[property='og:${options.ogTagName}']`) as HTMLMetaElement;
+        tagEl = getMeta(head, `og:${options.ogTagName}`);
     }
     if (!tagEl && options && options.allowId) {
-        tagEl = head.querySelector(`meta[name='twitter:${cardTagName}:id'], meta[property='twitter:${cardTagName}:id']`) as HTMLMetaElement;
+        tagEl = getMeta(head, `twitter:${cardTagName}:id`);
         if (tagEl) {
-            return { id: (tagEl.content || tagEl.getAttribute("value") || "").trim() };
+            return { id: getMetaProperty(tagEl) };
         }
     }
     if (!tagEl && options && options.required) {
@@ -238,7 +255,7 @@ function getMetaContent(head: HTMLHeadElement, cardTagName: string, options?: Me
     if (!tagEl) {
         return;
     }
-    return { value: (tagEl.content || tagEl.getAttribute("value") || "").trim() };
+    return { value: getMetaProperty(tagEl) };
 
     // TODO: What if site and site:id coexist?
 }
