@@ -1,6 +1,6 @@
 import { jsdom } from "jsdom"
 
-export type TwitterCard = SummaryCard | AppCard | PlayerCard | AmplifyCard;
+export type TwitterCard = SummaryCard | AppCard | PlayerCard | AmplifyCard | LiveVideoCard;
 
 export interface ValueOrId {
     value?: string;
@@ -39,6 +39,8 @@ export function parse(html: string, origin: string): TwitterCard {
                 return parseSummary(head, "summary", origin);
             case "amplify":
                 return parseAmplify(head);
+            case "745291183405076480:live_video":
+                return parseLiveVideo(head);
         }
     }
     catch (err) {
@@ -224,6 +226,53 @@ function parseAmplify(head: HTMLHeadElement) {
     card.amplifyDynamicAds = getMetaValue(head, "amplify:dynamic_ads") === "true";
     card.amplifyContentDurationSeconds = parseFloat(getMetaValue(head, "amplify:content_duration_seconds"));
     card.amplifyShareId = getMetaValue(head, "amplify:share_id");
+
+    return card;
+}
+
+export interface LiveVideoCard {
+    undocumented: true;
+
+    card: "745291183405076480:live_video";
+    title: string;
+    text: {
+        subtitle: string;
+        eventId: string;
+        state: string;
+        mediaId: string;
+        streamContentType: string;
+        hostName: string;
+        startTime: number;
+    };
+    imageThumbnail: {
+        src: string;
+        height: number;
+        width: number;
+    };
+    amplifyDynamicAds: boolean;
+}
+
+function parseLiveVideo(head: HTMLHeadElement) {
+    const card = { card: "745291183405076480:live_video" } as LiveVideoCard;
+
+    // this is undocumented, do not require anything
+
+    card.title = getMetaValue(head, "title");
+    card.text = {
+        subtitle: getMetaValue(head, "text:subtitle"),
+        eventId: getMetaValue(head, "text:event_id"),
+        state: getMetaValue(head, "text:state"),
+        mediaId: getMetaValue(head, "text:media_id"),
+        streamContentType: getMetaValue(head, "text:stream_content_type"),
+        hostName: getMetaValue(head, "text:host_name"),
+        startTime: Number.parseInt(getMetaValue(head, "text:start_time"))
+    };
+    card.imageThumbnail = {
+        src: getMetaValue(head, "image:thumbnail:src"),
+        height: Number.parseInt(getMetaValue(head, "image:thumbnail:height")),
+        width: Number.parseInt(getMetaValue(head, "image:thumbnail:width"))
+    };
+    card.amplifyDynamicAds = !!getMetaValue(head, "amplify:dynamic_ads");
 
     return card;
 }

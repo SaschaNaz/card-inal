@@ -1,4 +1,4 @@
-export declare type TwitterCard = SummaryCard | AppCard | PlayerCard | AmplifyCard;
+export declare type TwitterCard = SummaryCard | AppCard | PlayerCard | AmplifyCard | LiveVideoCard;
 export interface ValueOrId {
     value?: string;
     id?: string;
@@ -65,4 +65,24 @@ export interface AmplifyCard {
     amplifyDynamicAds: boolean;
     amplifyContentDurationSeconds: number;
     amplifyShareId: string;
+}
+export interface LiveVideoCard {
+    undocumented: true;
+    card: "745291183405076480:live_video";
+    title: string;
+    text: {
+        subtitle: string;
+        eventId: string;
+        state: string;
+        mediaId: string;
+        streamContentType: string;
+        hostName: string;
+        startTime: number;
+    };
+    imageThumbnail: {
+        src: string;
+        height: number;
+        width: number;
+    };
+    amplifyDynamicAds: boolean;
 }
