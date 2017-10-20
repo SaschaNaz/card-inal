@@ -1,4 +1,4 @@
-export declare type TwitterCard = SummaryCard | AppCard | PlayerCard | AmplifyCard | LiveVideoCard;
+export declare type TwitterCard = SummaryCard | AppCard | PlayerCard | AudioCard | AmplifyCard | LiveVideoCard;
 export interface ValueOrId {
     value?: string;
     id?: string;
@@ -31,8 +31,10 @@ export interface AppStoreData {
     ipad: string;
     googleplay: string;
 }
-export interface PlayerCard {
+export interface PlayerCard extends PlayerCardBody {
     card: "player";
+}
+export interface PlayerCardBody {
     /** The title of the content */
     title: string;
     /** The Twitter @username the card is attributed to */
@@ -46,6 +48,12 @@ export interface PlayerCard {
     imageAlt: string;
     playerStream: string;
     playerStreamContentType: string;
+}
+export interface AudioCard extends PlayerCardBody {
+    card: "audio";
+    audioPartner: string;
+    audioArtistName: string;
+    audioSource: string;
 }
 export interface AmplifyCard {
     card: "amplify";

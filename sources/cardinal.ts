@@ -1,6 +1,6 @@
 import { jsdom } from "jsdom"
 
-export type TwitterCard = SummaryCard | AppCard | PlayerCard | AmplifyCard | LiveVideoCard;
+export type TwitterCard = SummaryCard | AppCard | PlayerCard | AudioCard | AmplifyCard | LiveVideoCard;
 
 export interface ValueOrId {
     value?: string;
@@ -34,6 +34,8 @@ export function parse(html: string, origin: string): TwitterCard {
                 return parseApp(head);
             case "player":
                 return parsePlayer(head);
+            case "audio":
+                return parseAudio(head);
             case "product":
                 console.warn("Deprecated 'product' card type is detected");
                 return parseSummary(head, "summary", origin);
@@ -148,8 +150,11 @@ function parseApp(head: HTMLHeadElement) {
     return card;
 }
 
-export interface PlayerCard {
+export interface PlayerCard extends PlayerCardBody {
     card: "player";
+}
+
+export interface PlayerCardBody {
     /** The title of the content */
     title: string;
     /** The Twitter @username the card is attributed to */
@@ -182,6 +187,26 @@ function parsePlayer(head: HTMLHeadElement) {
     if (card.playerStream) {
         card.playerStreamContentType = getMetaValue(head, "player:stream:content_type");
     }
+
+    return card;
+}
+
+export interface AudioCard extends PlayerCardBody {
+    card: "audio";
+    audioPartner: string;
+    audioArtistName: string;
+    audioSource: string;
+}
+
+function parseAudio(head: HTMLHeadElement) {
+    const card = {
+        ...parsePlayer(head),
+        card: "audio"
+    } as AudioCard;
+
+    card.audioPartner = getMetaValue(head, "audio:partner", { required: true });
+    card.audioArtistName = getMetaValue(head, "audio:artist_name", { required: true });
+    card.audioSource = getMetaValue(head, "audio:source", { required: true });
 
     return card;
 }

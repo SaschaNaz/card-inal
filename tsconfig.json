@@ -7,5 +7,6 @@
         "noImplicitThis": true,
         "module": "commonjs",
         "outDir": "built/"
-    }
+    },
+    "compileOnSave": true
 }
