@@ -3,7 +3,7 @@ export interface ValueOrId {
     value?: string;
     id?: string;
 }
-export declare function parse(html: string, origin: string): TwitterCard;
+export declare function parse(html: string | ArrayBuffer, origin: string): TwitterCard;
 export interface SummaryCard {
     card: "summary" | "summary_large_image";
     origin: string;
