@@ -1,6 +1,6 @@
 {
   "name": "card-inal",
-  "version": "1.5.1",
+  "version": "1.6.0",
   "description": "Accepts Twitter Cards metadata and creates corresponding JSON file",
   "main": "lib/cardinal.js",
   "typings": "lib/cardinal.d.ts",
