@@ -1,6 +1,6 @@
 import { JSDOM } from "jsdom"
 
-export type TwitterCard = SummaryCard | AppCard | PlayerCard | AudioCard | AmplifyCard | LiveVideoCard;
+export type TwitterCard = SummaryCard | AppCard | PlayerCard | AudioCard | AmplifyCard | LiveVideoCard | PeriscopeCard;
 
 export interface ValueOrId {
     value?: string;
@@ -42,7 +42,8 @@ export function parse(html: string | ArrayBuffer, origin: string): TwitterCard {
             case "amplify":
                 return parseAmplify(head);
             case "745291183405076480:live_video":
-                return parseLiveVideo(head);
+            case "3691233323:periscope_broadcast":
+                return parseUndocumented(head, cardType);
         }
     }
     catch (err) {
@@ -277,29 +278,59 @@ export interface LiveVideoCard {
     amplifyDynamicAds: boolean;
 }
 
-function parseLiveVideo(head: HTMLHeadElement) {
-    const card = { card: "745291183405076480:live_video" } as LiveVideoCard;
+export interface PeriscopeCard {
+    undocumented: true,
 
-    // this is undocumented, do not require anything
+    card: "3691233323:periscope_broadcast",
+    site: ValueOrId,
+    maxage: number,
+    app: {
+        name: { iphone: string, googleplay: string },
+        id: { iphone: number, googleplay: string },
+        url: {
+            iphone: string,
+            googleplay: string
+        },
+        country: string
+    },
+    player:
+    {
+        value: string,
+        width: number,
+        height: number
+    },
+    api: { api: { endpoint: number } },
+    boolean: {
+        _omit_link_: boolean,
+        featured: boolean,
+        available_for_replay: boolean,
+        is_360: boolean
+    },
+    text: {
+        id: string,
+        status: string,
+        total_participants: number,
+        broadcast_state: string,
+        broadcaster_id: string,
+        broadcaster_twitter_id: number,
+        broadcaster_username: string,
+        broadcaster_display_name: string,
+        broadcast_source: string,
+        timecode: number,
+        initial_camera_orientation: number,
+        broadcast_width: number,
+        broadcast_height: number
+    },
+    string: { broadcast_media_key: string },
+    widgets: { csp: string }
+}
 
-    card.title = getMetaValue(head, "title");
-    card.text = {
-        subtitle: getMetaValue(head, "text:subtitle"),
-        eventId: getMetaValue(head, "text:event_id"),
-        state: getMetaValue(head, "text:state"),
-        mediaId: getMetaValue(head, "text:media_id"),
-        streamContentType: getMetaValue(head, "text:stream_content_type"),
-        hostName: getMetaValue(head, "text:host_name"),
-        startTime: Number.parseInt(getMetaValue(head, "text:start_time"))
-    };
-    card.imageThumbnail = {
-        src: getMetaValue(head, "image:thumbnail:src"),
-        height: Number.parseInt(getMetaValue(head, "image:thumbnail:height")),
-        width: Number.parseInt(getMetaValue(head, "image:thumbnail:width"))
-    };
-    card.amplifyDynamicAds = !!getMetaValue(head, "amplify:dynamic_ads");
-
-    return card;
+function parseUndocumented(head: HTMLHeadElement, card: string) {
+    return {
+        card,
+        undocumented: true,
+        ...getAllMeta(head)
+    } as PeriscopeCard;
 }
 
 interface MetaGetOptions {
@@ -363,4 +394,57 @@ function getMetaValueMap(head: HTMLHeadElement, cardTagNames: string[], options?
         dict[tagName] = meta.value;
     }
     return dict;
+}
+
+function getAllMeta(head: HTMLHeadElement) {
+    const map = getMetaMap(head);
+    const object = {} as any;
+
+    for (const [key, value] of map) {
+        setRecursive(object, key, value);
+    }
+
+    return object;
+}
+
+function getMetaMap(head: HTMLHeadElement) {
+    const metas = head.querySelectorAll("meta[name^='twitter:'],meta[property^='twitter:']") as NodeListOf<HTMLMetaElement>;
+    const map = new Map<string, any>();
+    for (const meta of Array.from(metas)) {
+        const name = (meta.name || meta.getAttribute("property")).slice(8);
+        const content = (meta.content || meta.getAttribute("value") || "").trim()
+        if (content === 'true') {
+            map.set(name, true);
+        }
+        else if (content === 'false') {
+            map.set(name, false);
+        }
+        else if (!isNaN(content as any)) {
+            map.set(name, Number(content));
+        }
+        else {
+            map.set(name, content);
+        }
+    }
+    return map;
+}
+
+function setRecursive(object: any, propertyPath: string, value: any) {
+    const namespaceNames = propertyPath.split(':');
+    const propertyName = namespaceNames.pop();
+    let lastNamespace = object;
+
+    for (const namespaceName of namespaceNames) {
+        if (!lastNamespace[namespaceName]) {
+            lastNamespace[namespaceName] = {};
+        }
+        else if (typeof lastNamespace[namespaceName] !== "object") {
+            // twitter:player is a namespace and also a property path
+            lastNamespace[namespaceName] = {
+                value: lastNamespace[namespaceName]
+            };
+        }
+        lastNamespace = lastNamespace[namespaceName];
+    }
+    lastNamespace[propertyName] = value;
 }

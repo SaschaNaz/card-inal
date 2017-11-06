@@ -1,4 +1,4 @@
-export declare type TwitterCard = SummaryCard | AppCard | PlayerCard | AudioCard | AmplifyCard | LiveVideoCard;
+export declare type TwitterCard = SummaryCard | AppCard | PlayerCard | AudioCard | AmplifyCard | LiveVideoCard | PeriscopeCard;
 export interface ValueOrId {
     value?: string;
     id?: string;
@@ -93,4 +93,62 @@ export interface LiveVideoCard {
         width: number;
     };
     amplifyDynamicAds: boolean;
+}
+export interface PeriscopeCard {
+    undocumented: true;
+    card: "3691233323:periscope_broadcast";
+    site: ValueOrId;
+    maxage: number;
+    app: {
+        name: {
+            iphone: string;
+            googleplay: string;
+        };
+        id: {
+            iphone: number;
+            googleplay: string;
+        };
+        url: {
+            iphone: string;
+            googleplay: string;
+        };
+        country: string;
+    };
+    player: {
+        value: string;
+        width: number;
+        height: number;
+    };
+    api: {
+        api: {
+            endpoint: number;
+        };
+    };
+    boolean: {
+        _omit_link_: boolean;
+        featured: boolean;
+        available_for_replay: boolean;
+        is_360: boolean;
+    };
+    text: {
+        id: string;
+        status: string;
+        total_participants: number;
+        broadcast_state: string;
+        broadcaster_id: string;
+        broadcaster_twitter_id: number;
+        broadcaster_username: string;
+        broadcaster_display_name: string;
+        broadcast_source: string;
+        timecode: number;
+        initial_camera_orientation: number;
+        broadcast_width: number;
+        broadcast_height: number;
+    };
+    string: {
+        broadcast_media_key: string;
+    };
+    widgets: {
+        csp: string;
+    };
 }
